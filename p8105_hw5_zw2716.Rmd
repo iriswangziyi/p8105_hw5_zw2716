@@ -132,6 +132,7 @@ path_df =
     names_prefix = "week_"
   )
 
+path_df
 ```
 
 2. Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
@@ -242,7 +243,7 @@ sim_results %>%
 ```
 
 **Describe the association between effect size and power:**  
-According to the above plot, we see with higher the value of the true μ (effect size), we have more times that the Null was rejected, meaning we have higher power of test. More specifically, at μ = 0, power = 0; and at μ = {5, 6} we have power = 1. This makes sense since our null hypothesis is $H0: \mu = 0$ for all different $\mu$ (effect sizes), so as $\mu$ increase, the more times null was rejected, and thus higher power of the test.
+According to the above plot, we see with higher the value of the true μ (effect size), we have more times that the Null was rejected, meaning we have higher power of test. More specifically, at μ = 0, power = 0; and at μ = {5, 6} we have power = 1. This makes sense since our null hypothesis is H0: μ = 0 for all different μ (effect sizes), so as μ increase, the more times null was rejected, and thus higher power of the test.
 
 - Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis.   
 
@@ -277,6 +278,6 @@ sim_results %>%
   scale_x_continuous(limits = c(0,6), breaks = seq(0,6,1)) 
 ```
 
-Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
+**Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?**
 
 Yes in some way. The sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ only when μ = 0, 3, 4, 5, and 6. The reason behind this is that we know from the above plot "Proportion of Times Null was Rejected (Power of Test) for different μ", the higher μ we have, the greater power the test has, and the more null hypothesis it will reject. As a result, the sample average of μ̂  across tests for which the null is rejected will approximately equal to the true value of μ for higher value of μ.
