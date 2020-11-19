@@ -27,7 +27,7 @@ The Washington Post has gathered data on homicides in 50 large U.S. cities and m
 1. Read in the data.
 Describe the raw data. Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 
-```{r, message=F}
+```{r, message = F}
 homicide_df = 
   read_csv("homicide_data/homicide-data.csv") %>% 
   mutate(
@@ -100,7 +100,7 @@ A data from a longitudinal study that included a control arm and an experimental
 - Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
 - Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
 
-```{r, message=F}
+```{r, message = F}
 path_df = 
   
   # a dataframe containing all file names
@@ -159,10 +159,23 @@ When designing an experiment or analysis, a common question is whether it is lik
 
 First set the following design elements:
 
-- Fix n=30
-- Fix σ=5
+- Fix n = 30
+- Fix σ = 5
 
-Set μ=0. Generate 5000 datasets from the model $$x∼Normal[μ,σ]$$
+Set μ = 0. Generate 5000 datasets from the model $$x∼Normal[μ,σ]$$
+
+```{r}
+set.seed(1000)
+n = 30
+sigma = 5
+
+
+
+mu = 0
+
+x = rnorm(n, mean = mu, sd = sigma)
+t.test(x, mu = mu, conf.level = 0.95)
+```
 
 For each dataset, save μ̂  and the p-value arising from a test of H:μ=0 using α=0.05. Hint: to obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
 
