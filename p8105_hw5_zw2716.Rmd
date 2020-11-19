@@ -22,10 +22,12 @@ scale_fill_discrete = scale_fill_viridis_d
 
 
 ## Problem 1
+The Washington Post has gathered data on homicides in 50 large U.S. cities and made the data available through a GitHub repository.
 
-Read in the data.
+1. Read in the data.
+Describe the raw data. Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
 
-```{r}
+```{r, message=F}
 homicide_df = 
   read_csv("homicide_data/homicide-data.csv") %>% 
   mutate(
@@ -40,7 +42,6 @@ homicide_df =
   filter(city_state != "Tulsa_AL")
 ```
 
-
 Let's look at this a bit
 
 ```{r}
@@ -53,7 +54,8 @@ aggregate_df =
   )
 ```
 
-Can I do a prop test for a single city?
+2. Can I do a prop test for a single city?
+For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
 
 ```{r}
 prop.test(
@@ -62,7 +64,8 @@ prop.test(
   broom::tidy()
 ```
 
-Try to iterate ........
+3. Try to iterate ........
+Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 
 ```{r}
 results_df = 
@@ -76,7 +79,7 @@ results_df =
   select(city_state, estimate, conf.low, conf.high)
 ```
 
-
+4. Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides.
 
 ```{r}
 results_df %>% 
@@ -87,52 +90,83 @@ results_df %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
+## Problem 2 
 
+A data from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
 
-```{r, error = TRUE}
-city_prop_test = function(df) {
-  
-  n_unsovled ...
-  n_total ... 
-  
-  prop.test(.....)
-  
-}
-homicide_df = 
-  read_csv("data/homicide-data.csv") %>% 
-  mutate(
-    city_state = str_c(city, state, sep = "_"),
-    resolved = case_when(
-      disposition == "Closed without arrest" ~ "unsolved",
-      disposition == "Open/No arrest"        ~ "unsolved",
-      disposition == "Closed by arrest"      ~ "solved",
-    )
-  ) %>% 
-  select(city_state, resolved) %>% 
-  filter(city_state != "Tulsa_AL") %>% 
-  nest(data = resolved)
-```
+1. Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
 
+- Start with a dataframe containing all file names; the list.files function will help
+- Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+- Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
 
-
-
-
-## Problem 2 ideas ...
-
-
-import one dataset 
-
-```{r}
-data_1 = read_csv("lda_data/con_01.csv")
-```
-
-```{r, error = TRUE}
+```{r, message=F}
 path_df = 
-  tibble(
-    path = list.files("lda_data"),
-  ) %>% 
+  
+  # a dataframe containing all file names
+  tibble(path = list.files("lda_data")) %>% 
+  
+  # Iterate over file names, read in data for each subject, save result as a new var
   mutate(
     path = str_c("lda_data/", path),
-    data = map(.............))
-read_csv(path_df$path[[1]])
+    data = map(path, read_csv)
+  ) %>% 
+
+  # Tidy the result: manipulate file names to include arm and subject ID
+  unnest(data) %>%
+  mutate(
+    path = str_remove(path, "lda_data/"),
+    path = str_remove(path, ".csv")
+  ) %>% 
+  separate(path, into = c("arm", "subject_id"), sep = "_") %>% 
+  mutate(
+    arm = case_when(
+      arm == "con" ~ "control",
+      arm == "exp" ~ "experimental"
+    )
+  ) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "observation",
+    names_prefix = "week_"
+  )
+
 ```
+
+2. Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+```{r}
+spaghetti_plot = path_df %>% 
+  group_by(subject_id) %>% 
+  ggplot(aes(x = week, y = observation, group = subject_id, color = arm)) +
+  geom_point() +
+  geom_path() +
+  labs(x = "Week",
+       y = "Observations",
+       title = "Observations of the Control and Experimental Arms Over 8 Weeks")
+
+spaghetti_plot
+``` 
+
+**Comment on differences between groups:**  
+In the above spaghetti plot, each yellow line represents the observations for each subject from the experimental arm; and each purple line represents the observations for each subject from the control arm.   
+According to the plot, we can see the yellow lines (experimental arm) had much higher observation values compare to the purple lines (control arm) starting from the second week. In addition, the observation values of the control arm did not vary much across the 8 weeks, whereas, the observation values of the experimental arm increased over the 8 weeks.  
+
+## Problem 3
+
+When designing an experiment or analysis, a common question is whether it is likely that a true effect will be detected – put differently, whether a false null hypothesis will be rejected. The probability that a false null hypothesis is rejected is referred to as power, and it depends on several factors, including: the sample size; the effect size; and the error variance. In this problem, you will conduct a simulation to explore power in a one-sample t-test.
+
+First set the following design elements:
+
+- Fix n=30
+- Fix σ=5
+
+Set μ=0. Generate 5000 datasets from the model $$x∼Normal[μ,σ]$$
+
+For each dataset, save μ̂  and the p-value arising from a test of H:μ=0 using α=0.05. Hint: to obtain the estimate and p-value, use broom::tidy to clean the output of t.test.
+
+Repeat the above for μ={1,2,3,4,5,6}, and complete the following:
+
+Make a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. Describe the association between effect size and power.
+Make a plot showing the average estimate of μ̂  on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
